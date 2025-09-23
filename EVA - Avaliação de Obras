@@ -1,0 +1,531 @@
+create schema EVA;
+
+-- criada tabelas do EVA
+
+create table eva.usuario (
+	id serial primary key,
+	nome varchar(100) not null,
+	datanascimento date not null,
+	datacriacao date not null,
+	tituloavaliador varchar (100)
+);
+
+create table eva.obra (
+	id serial primary key,
+	nome varchar(100) not null unique,
+	datalancamento date not null,
+	tipoobraid int,
+ 	categoriaid int,
+ 	autorid int,
+ 	empresaresponsavelid int
+);
+
+create table eva.categoria (
+	id serial primary key,
+	tipo varchar(50) not null,
+	subtipo varchar(50) not null
+);
+
+create table eva.tipoobra (
+	id serial primary key,
+	nome varchar(50) not null unique
+);
+
+create table eva.empresaresponsavel (
+	id serial primary key,
+	nome varchar(100) not null
+);
+
+create table eva.empresaresponsavelobra (
+	id serial primary key,
+	empresaresponsavelid int,
+	obraid int
+);
+
+create table eva.personagem (
+	id serial primary key,
+	nome varchar(100) not null,
+	idade int not null
+);
+
+create table eva.personagemobra (
+	id serial primary key,
+	obraid int,
+	personagemid int
+);
+
+create table eva.album ( 
+	id serial primary key,
+	nome varchar(100)
+);
+
+create table eva.albumobra (
+	id serial primary key,
+	albumid int,
+	obraid int
+);
+
+create table eva.ator ( 
+	id serial primary key,
+	nome varchar(100) not null
+);
+
+create table eva.atorobra (
+	id serial primary key,
+	atorid int,
+	obraid int
+);
+
+create table eva.autor (
+	id serial primary key,
+	nome varchar(100) not null
+);
+
+create table eva.avaliacao (
+	id serial primary key,
+	nota int,
+	opniao varchar(250),
+	obraid int,
+	usuarioid int
+);
+
+alter table eva.avaliacao alter column nota type float;
+
+update eva.avaliacao set nota = 9.5 where id = 2
+
+select * from eva.avaliacao
+
+-- adicionando as foreign key com nome personalizado
+
+alter table eva.albumobra add constraint FK_albumobra_album foreign key (albumid) references eva.album(id);
+alter table eva.albumobra add constraint FK_albumobra_obra foreign key (obraid) references eva.obra(id);
+
+alter table eva.atorobra add constraint FK_atorobra_ator foreign key (atorid) references eva.ator(id);
+alter table eva.atorobra add constraint FK_atorobra_obra foreign key (obraid) references eva.obra(id);
+
+alter table eva.avaliacao add constraint FK_avaliacao_obra foreign key (obraid) references eva.obra(id);
+alter table eva.avaliacao add constraint FK_avaliacao_usuario foreign key (usuarioid) references eva.usuario(id);
+
+alter table eva.empresaresponsavelobra add constraint FK_empresaresponsavelobra_empresaresponsavel foreign key (empresaresponsavelid) references eva.empresaresponsavel (id);
+alter table eva.empresaresponsavelobra add constraint FK_empresaresponsavelobra_obra foreign key (obraid) references eva.obra(id);
+
+alter table eva.obra add constraint FK_obra_tipoobra foreign key (tipoobraid) references eva.tipoobra(id);
+alter table eva.obra add constraint FK_obra_categoria foreign key (categoriaid) references eva.categoria(id);
+alter table eva.obra add constraint FK_obra_autor foreign key (autorid) references eva.autor(id);
+alter table eva.obra add constraint FK_obra_empresarespónsavel foreign key (empresaresponsavelid) references eva.empresaresponsavel(id);
+
+alter table eva.personagemobra add constraint FK_personagemobra_obra foreign key (obraid) references eva.obra(id);
+alter table eva.personagemobra add constraint FK_personagemobra_personagem foreign key (personagemid) references eva.personagem(id);
+
+-- Primeira inserção teste
+
+insert into eva.usuario 
+	(nome, datanascimento, datacriacao, tituloavaliador) 
+	values ('Bruno Santos', '2003-09-30 00:00:00', now(), 'O CRIADOR');
+
+insert into eva.categoria 
+	(tipo, subtipo) 
+	values ('RPG', 'Ação e Aventura');
+
+insert into eva.tipoobra 
+	(nome) 
+	values ('Jogo');
+
+insert into eva.empresaresponsavel 
+	(nome) 
+	values ('CD Projekt');
+
+insert into eva.obra 
+	(nome, datalancamento, tipoobraid, categoriaid, autorid, empresaresponsavelid) 
+	values ('Cyberpunk 2077', '2020-12-10', 3, 3, null, 3);
+
+insert into eva.avaliacao 
+	(nota, opniao, obraid, usuarioid) values 
+	(10, 'Um dos melhores jogos futuristas já feito', 4, 3);
+
+-- teste dos insert
+
+select obra.nome, obra.datalancamento, tipoobra.nome as tipo, categoria.tipo, categoria.subtipo, empresaresponsavel.nome as empresa from eva.obra
+join eva.tipoobra on obra.tipoobraid = tipoobra.id
+join eva.categoria on obra.categoriaid = categoria.id
+join eva.empresaresponsavel on obra.empresaresponsavelid = empresaresponsavel.id
+
+select a.nota, a.opniao, o.nome as serie, u.nome as avaliador from eva.avaliacao a 
+join eva.obra o on a.obraid = o.id
+join eva.usuario u on a.usuarioid = u.id
+
+-- View para facilitar consulta de obra
+
+create view eva.v_consultar_obra as
+select 
+    o.nome as obra,
+    o.datalancamento,
+    t.nome as tipo,
+    c.tipo as categoria,
+    c.subtipo,
+    e.nome as empresa
+from eva.obra o
+join eva.tipoobra t on o.tipoobraid = t.id
+join eva.categoria c on o.categoriaid = c.id
+join eva.empresaresponsavel e on o.empresaresponsavelid = e.id;
+
+select * from eva.v_consultar_obra
+
+create view eva.v_consultar_notas as
+select
+	a.nota, 
+	a.opniao, 
+	o.nome as serie, 
+	u.nome as avaliador 
+from eva.avaliacao a 
+	join eva.obra o on a.obraid = o.id
+	join eva.usuario u on a.usuarioid = u.id;
+
+select * from eva.v_consultar_notas
+
+-- Para facilitar o insert de novas informações vou criar funções
+
+select * from eva.obra
+
+create or replace function eva.f_inserir_obra (f_nome varchar(100), f_datalancamento date, f_tipoobraid int, f_categoriaid int, f_autorid int, f_empresaresponsavelid int)
+returns void
+language plpgsql
+as $$
+	begin
+		insert into eva.obra (nome, datalancamento, tipoobraid, categoriaid, autorid, empresaresponsavelid) 
+		values (f_nome, f_datalancamento, f_tipoobraid, f_categoriaid, f_autorid, f_empresaresponsavelid);
+	end;
+$$;
+
+-- criação das demais funções
+
+create or replace function eva.f_incluir_avaliacao (f_nota float, f_opniao varchar(250), f_obraid int, f_usuarioid int)
+returns void
+language plpgsql as $$
+	begin
+		insert into eva.avaliacao (nota, opniao, obraid, usuarioid) values (f_nota, f_opniao, f_obraid, f_usuarioid);
+	end;
+$$;
+
+create or replace function eva.f_incluir_autor (f_nome varchar(100))
+returns void
+language plpgsql as $$
+	begin
+		insert into eva.autor (nome) values (f_nome);
+	end;
+$$;
+
+create or replace function eva.f_inserir_ator (f_nome varchar(100))
+returns void
+language plpgsql as $$
+	begin
+		insert into eva.ator (nome) values (f_nome);
+	end;
+$$;
+
+create or replace function eva.f_inserir_album (f_nome varchar(100))
+returns void
+language plpgsql as $$
+	begin
+		insert into eva.album (nome) values (f_nome);
+	end;
+$$;
+
+create or replace function eva.f_inserir_categoria (f_tipo varchar(50), f_subtipo varchar(50))
+returns void
+language plpgsql as $$
+	begin
+		insert into eva.categoria (tipo, subtipo) values (f_tipo, f_subtipo);
+	end;
+$$;
+
+create or replace function eva.f_inserir_empresa (f_nome varchar(100))
+returns void
+language plpgsql as $$
+	begin
+		insert into eva.empresaresponsavel (nome) values (f_nome);
+	end;
+$$;
+
+create or replace function eva.f_inserir_personagem (f_nome varchar(100), f_idade int)
+returns void
+language plpgsql as $$
+	begin
+		insert into eva.personagem (nome, idade) values (f_nome, f_idade);
+	end;
+$$;
+
+create or replace function eva.f_inserir_tipoobra (f_nome varchar(50))
+returns void
+language plpgsql as $$
+	begin
+		insert into eva.tipoobra (nome) values (f_nome);
+	end;
+$$;
+
+create or replace function eva.f_inserir_usuario (f_nome varchar(100), f_datanascimento date, f_tituloavaliador varchar(100))
+returns void
+language plpgsql as $$
+	begin
+		insert into eva.usuario (nome, datanascimento, datacriacao, tituloavaliador) values (f_nome, f_datanascimento, now(), f_tituloavaliador);
+	end;
+$$;  
+
+-- teste da função (inclusão manual de dados)
+
+insert into eva.autor (nome) values ('J. R. R. Tolkien')
+
+insert into eva.empresaresponsavel (nome) values ('New Line Cinema')
+
+-- Inserção de fato
+
+select eva.f_inserir_obra ('O Senhor dos Aneis: A Sociedade do Anel', '2001-01-01', 4, 6, 1, 5);
+
+-- mais inserções de categoria
+
+insert into eva.tipoobra 
+	(nome) 
+	values ('Filme');
+
+insert into eva.tipoobra 
+	(nome) 
+	values ('Serie');
+
+insert into eva.tipoobra 
+	(nome) 
+	values ('Anime');
+
+insert into eva.tipoobra 
+	(nome) 
+	values ('Livro');
+
+insert into eva.tipoobra 
+	(nome) 
+	values ('Manwa');
+
+insert into eva.tipoobra 
+	(nome) 
+	values ('Manga');
+
+insert into eva.tipoobra 
+	(nome) 
+	values ('HQ');
+
+insert into eva.tipoobra 
+	(nome) 
+	values ('Novel');
+
+insert into eva.tipoobra 
+	(nome) 
+	values ('Outros');
+
+-- Inserção já pela função
+
+select eva.f_inserir_tipoobra ('Animação');
+
+select eva.f_inserir_tipoobra ('Serie Animada');
+
+-- Mais inserções de tipo
+
+insert into eva.categoria 
+	(tipo, subtipo) 
+	values ('Terror', '');
+
+insert into eva.categoria 
+	(tipo, subtipo) 
+	values ('Fantasia', 'Medieval');
+
+insert into eva.categoria 
+	(tipo, subtipo) 
+	values ('Ficção Ciêntifica', 'Futurista');
+
+insert into eva.categoria 
+	(tipo, subtipo) 
+	values ('Ficção Ciêntifica', 'Moderna');
+
+insert into eva.categoria 
+	(tipo, subtipo) 
+	values ('Sandbox', 'Exploração');
+
+insert into eva.categoria 
+	(tipo, subtipo) 
+	values ('Romance', 'Colegial');
+
+insert into eva.categoria 
+	(tipo, subtipo) 
+	values ('Mistério', 'Ação e Aventura');
+
+insert into eva.categoria 
+	(tipo, subtipo) 
+	values ('Exploração', 'Metroidevânia');
+
+select eva.f_inserir_categoria ('Comédia', '');
+select eva.f_inserir_categoria ('Fantasia', 'Magia');
+select eva.f_inserir_categoria ('Terror', 'Puzzle');
+select eva.f_inserir_categoria ('Fantasia', 'Viagem no tempo');
+select eva.f_inserir_categoria ('Survival', 'Horro');
+
+-- inserção de mais empresas
+
+insert into eva.empresaresponsavel 
+	(nome) 
+	values ('Team Cherry');
+
+select eva.f_inserir_empresa ('Ubisoft');
+select eva.f_inserir_empresa ('Nintendo');
+select eva.f_inserir_empresa ('Playstation');
+select eva.f_inserir_empresa ('Microsoft');
+select eva.f_inserir_empresa ('Larian Studios');
+select eva.f_inserir_empresa ('Santa Monica');
+select eva.f_inserir_empresa ('Capcom');
+select eva.f_inserir_empresa ('Cartoon network');
+select eva.f_inserir_empresa ('Warner Bros.');
+select eva.f_inserir_empresa ('Killmonday Games');
+select eva.f_inserir_empresa ('White Fox');
+
+-- inserção de nota
+
+insert into eva.obra 
+	(nome, datalancamento, tipoobraid, categoriaid, autorid, empresaresponsavelid) 
+	values ('Cyberpunk 2077', '2020-12-10', 3, 3, null, 3);
+
+-- Adição de mais usuarios
+
+insert into eva.usuario 
+	(nome, datanascimento, datacriacao, tituloavaliador) 
+	values ('Giovanna Cruz', '2001-10-31', now(), 'A REBAIXADA');
+
+insert into eva.usuario 
+	(nome, datanascimento, datacriacao, tituloavaliador) 
+	values ('Paulo Junior', '2003-11-25', now(), 'QUASE HUMANO');
+
+insert into eva.usuario 
+	(nome, datanascimento, datacriacao, tituloavaliador) 
+	values ('Jonatha Cruz', '2003-03-14', now(), 'O OBSECADO');
+
+-- Adição de mais avaliações
+
+insert into eva.avaliacao 
+	(nota, opniao, obraid, usuarioid) values 
+	(9.5, 'CINEMA', 4, 5);
+
+insert into eva.avaliacao 
+	(nota, opniao, obraid, usuarioid) values 
+	(9, 'Saudades David Martinez', 4, 6);
+
+insert into eva.avaliacao 
+	(nota, opniao, obraid, usuarioid) values 
+	(10, 'Metroidevania que acertou em todos os aspectos apresentados', 5, 3);
+
+insert into eva.avaliacao 
+	(nota, opniao, obraid, usuarioid) values 
+	(8, 'Entendo agora o por que de ser tão aclamado, em sua época deve ter sido o melhor', 5, 3);
+
+insert into eva.avaliacao 
+	(nota, opniao, obraid, usuarioid) values 
+	(10, 'Um dos filmes da minha vida', 7, 6);
+
+-- Adição de mais autores
+
+select eva.f_incluir_autor ('Arthur Conan Doyle');
+select eva.f_incluir_autor ('H. P. Lovecraft');
+select eva.f_incluir_autor ('J. K. Rowling');
+select eva.f_incluir_autor ('Junji Ito');
+select eva.f_incluir_autor ('Eiichiro Oda');
+select eva.f_incluir_autor ('Stephen King');
+select eva.f_incluir_autor ('Tappei Nagatsuki');
+
+-- inserção de albuns
+
+select eva.f_inserir_album ('ballads 1');
+select eva.f_inserir_album ('Nectar');
+select eva.f_inserir_album ('smithereens');
+
+-- Inserção de personagens
+
+select eva.f_inserir_personagem ('Gumball', 12);
+select eva.f_inserir_personagem ('Darwin', 10);
+select eva.f_inserir_personagem ('Harry Potter', 17);
+select eva.f_inserir_personagem ('Hermione Granger', 17);
+select eva.f_inserir_personagem ('Ronald Wesley', 17);
+select eva.f_inserir_personagem ('Draco Malfoy', 17);
+select eva.f_inserir_personagem ('Bilbo Bolseiro', 50);
+select eva.f_inserir_personagem ('Frodo Bolseiro', 50);
+select eva.f_inserir_personagem ('Gandalf', 2000);
+select eva.f_inserir_personagem ('Hornet', 34);
+select eva.f_inserir_personagem ('Hollow Knight', 34);
+select eva.f_inserir_personagem ('Fran Bow', 10);
+select eva.f_inserir_personagem ('Subaru Natsuki', 18);
+select eva.f_inserir_personagem ('Leon S Kennedy', 35);
+select eva.f_inserir_personagem ('Chris Redfield', 48);
+select eva.f_inserir_personagem ('Ada wong', 39);
+select eva.f_inserir_personagem ('Jill Valentine', 39);
+
+-- nova obra 
+
+insert into eva.obra 
+	(nome, datalancamento, tipoobraid, categoriaid, autorid, empresaresponsavelid) 
+	values ('Hollow Knight', '2017-02-24', 3, 12, null, 4);
+
+select eva.f_inserir_obra ('O Incrivel Mundo de Gumball', '2011-05-03', 15, 13, Null, 13);
+select eva.f_inserir_obra ('Harry Potter e a Pedra Filosofal', '2001-11-23', 4, 14, 3, 14);
+select eva.f_inserir_obra ('O Hobbit', '2012-12-14', 4, 6, 1, 5);
+select eva.f_inserir_obra ('Fran bow', '2015-08-27', 3, 15, Null, 15);
+select eva.f_inserir_obra ('Re Zero Temporada 1', '2016-04-04', 6, 16, 9, 16);
+select eva.f_inserir_obra ('Resident Evil 2 Remake', '2019-01-25', 3, 17, Null, 12);
+select eva.f_inserir_obra ('Resident Evil 4 Remake', '2023-03-24', 3, 17, Null, 12);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+-- Cantinho da inserção rapida
+
+select eva.f_incluir_autor ('nome');
+select eva.f_incluir_avaliacao (nota, 'opniao', idobra, idusuario);
+select eva.f_inserir_album ('nome');
+select eva.f_inserir_ator ('nome');
+select eva.f_inserir_categoria ('tipo', 'subtipo');
+select eva.f_inserir_empresa ('nome');
+select eva.f_inserir_obra ('nome', 'lancamento', tipoid, categoriaid, autorid, empresaid);
+select eva.f_inserir_personagem ('nome', idade);
+select eva.f_inserir_tipoobra ('tipo');
+select eva.f_inserir_usuario ('nome', 'nascimento', 'titulo');
+
+-- Cantinho das consultas rapidas
+
+select * from eva.empresaresponsavel e  
+
+select * from eva.v_consultar_obra
+
+select * from eva.v_consultar_notas
+
+
+
