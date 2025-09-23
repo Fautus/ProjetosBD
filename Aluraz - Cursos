@@ -1,0 +1,462 @@
+create schema aluraz
+
+create table aluraz.usuarios (
+	id serial primary key,
+	nome varchar(100) not null,
+	email varchar(100) not null,
+	datacadatro date not null
+);
+
+create table aluraz.cursos (
+	id serial primary key,
+	titulo varchar(100) not null unique,
+	categoria varchar(100) not null,
+	preco numeric(10,2) not null
+);
+
+create table aluraz.instrutores (
+	id serial primary key,
+	nome varchar(100) not null,
+	especialidade varchar(50) not null
+);
+
+create table aluraz.cursosistrutores (
+	cursosid int,
+	intrutoresid int
+);
+
+create table aluraz.matriculas (
+	id serial primary key,
+	usuarioid int,
+	cursoid int,
+	datamatricula date not null,
+	status varchar(1)
+);
+
+create table aluraz.pagamentos ( 
+	id serial primary key,
+	matriculaid int,
+	valor numeric(10,2),
+	datapagamento date,
+	metodopagamento varchar(10)
+);
+
+select * from aluraz.usuarios
+
+
+insert into aluraz.usuarios (nome, email, datacadatro) values ('Bruno Santos','brunodanilosantos@gmail.com',now());
+insert into aluraz.usuarios (nome, email, datacadatro) values ('Emilly Cristina','senhorarebaixada@gmail.com','2025-09-20');
+insert into aluraz.usuarios (nome, email, datacadatro) values ('Paulo Junior','berzeker@gmail.com','2025-08-10');
+insert into aluraz.usuarios (nome, email, datacadatro) values ('Jonathan Muscle','amoacademia123@gmail.com','2025-09-28');
+insert into aluraz.usuarios (nome, email, datacadatro) values ('Beatriz Brito','biartista@gmail.com','2025-09-16');
+insert into aluraz.usuarios (nome, email, datacadatro) values ('Giovanna Cruz','anacomraivademim@gmail.com','2025-08-30');
+insert into aluraz.usuarios (nome, email, datacadatro) values ('Samuel Andrade','soudonodoecommerce@gmail.com','2025-09-15');
+insert into aluraz.usuarios (nome, email, datacadatro) values ('Renan Pereira','inocentedemais@gmail.com','2025-08-16');
+insert into aluraz.usuarios (nome, email, datacadatro) values ('Wenderson Silva','tenhofome@gmail.com','2025-09-30');
+
+insert into aluraz.cursos (titulo, categoria, preco) values ('SQL Avançado', 'Banco de Dados', 250.00);
+insert into aluraz.cursos (titulo, categoria, preco) values ('Python para Data Science', 'Programação', 300.00);
+insert into aluraz.cursos (titulo, categoria, preco) values ('Machine Learning Básico', 'IA', 400.00);
+insert into aluraz.cursos (titulo, categoria, preco) values ('Docker e Kubernetes', 'DevOps', 350.00);
+insert into aluraz.cursos (titulo, categoria, preco) values ('Java Completo', 'Programação', 280.00);
+insert into aluraz.cursos (titulo, categoria, preco) values ('Cibersegurança Essencial', 'Segurança', 320.00);
+insert into aluraz.cursos (titulo, categoria, preco) values ('Introdução a Big Data', 'Dados', 270.00);
+insert into aluraz.cursos (titulo, categoria, preco) values ('Design Patterns em C#', 'Programação', 290.00);
+insert into aluraz.cursos (titulo, categoria, preco) values ('Gestão de Projetos Ágeis', 'Gestão', 220.00);
+insert into aluraz.cursos (titulo, categoria, preco) values ('Excel Avançado', 'Produtividade', 180.00);
+
+insert into aluraz.cursos (titulo, categoria, preco) values ('NoSQL com MongoDB', 'Banco de Dados', 260.00);
+insert into aluraz.cursos (titulo, categoria, preco) values ('Power BI Completo', 'Dados', 240.00);
+insert into aluraz.cursos (titulo, categoria, preco) values ('Introdução a Redes', 'Infraestrutura', 200.00);
+insert into aluraz.cursos (titulo, categoria, preco) values ('Kotlin para Android', 'Programação', 280.00);
+insert into aluraz.cursos (titulo, categoria, preco) values ('Rust Essencial', 'Programação', 310.00);
+insert into aluraz.cursos (titulo, categoria, preco) values ('Testes Automatizados com Selenium', 'Qualidade de Software', 270.00);
+insert into aluraz.cursos (titulo, categoria, preco) values ('Cloud Computing na AWS', 'DevOps', 400.00);
+insert into aluraz.cursos (titulo, categoria, preco) values ('Blockchain e Criptomoedas', 'Inovação', 450.00);
+insert into aluraz.cursos (titulo, categoria, preco) values ('Gestão Financeira para Devs', 'Gestão', 220.00);
+insert into aluraz.cursos (titulo, categoria, preco) values ('Inglês Técnico para TI', 'Idiomas', 180.00);
+
+
+insert into aluraz.instrutores (nome, especialidade) values ('Ana Martins', 'Banco de Dados');
+insert into aluraz.instrutores (nome, especialidade) values ('Carlos Souza', 'Programação Python');
+insert into aluraz.instrutores (nome, especialidade) values ('Fernanda Lima', 'Machine Learning');
+insert into aluraz.instrutores (nome, especialidade) values ('João Pereira', 'DevOps');
+insert into aluraz.instrutores (nome, especialidade) values ('Lucas Almeida', 'Java');
+insert into aluraz.instrutores (nome, especialidade) values ('Mariana Rocha', 'Cibersegurança');
+insert into aluraz.instrutores (nome, especialidade) values ('Rafael Torres', 'Big Data');
+insert into aluraz.instrutores (nome, especialidade) values ('Beatriz Mendes', 'C# e Arquitetura');
+insert into aluraz.instrutores (nome, especialidade) values ('Pedro Carvalho', 'Gestão Ágil');
+insert into aluraz.instrutores (nome, especialidade) values ('Juliana Costa', 'Excel e BI');
+
+insert into aluraz.instrutores (nome, especialidade) values ('Thiago Ramos', 'MongoDB e NoSQL');
+insert into aluraz.instrutores (nome, especialidade) values ('Camila Duarte', 'Business Intelligence');
+insert into aluraz.instrutores (nome, especialidade) values ('Marcelo Gomes', 'Redes de Computadores');
+insert into aluraz.instrutores (nome, especialidade) values ('Aline Ferreira', 'Desenvolvimento Mobile');
+insert into aluraz.instrutores (nome, especialidade) values ('Roberto Nascimento', 'Linguagens Modernas');
+insert into aluraz.instrutores (nome, especialidade) values ('Sofia Andrade', 'Testes e Qualidade');
+insert into aluraz.instrutores (nome, especialidade) values ('Diego Fernandes', 'Cloud Computing');
+insert into aluraz.instrutores (nome, especialidade) values ('Eduardo Moreira', 'Blockchain');
+insert into aluraz.instrutores (nome, especialidade) values ('Vanessa Oliveira', 'Gestão Financeira');
+insert into aluraz.instrutores (nome, especialidade) values ('Fábio Teixeira', 'Inglês Técnico');
+
+
+insert into aluraz.matriculas (usuarioid, cursoid, datamatricula, status) values (1, 1, '2024-01-10', 'F');
+insert into aluraz.matriculas (usuarioid, cursoid, datamatricula, status) values (2, 2, '2024-02-05', 'A');
+insert into aluraz.matriculas (usuarioid, cursoid, datamatricula, status) values (3, 3, '2024-03-12', 'C');
+insert into aluraz.matriculas (usuarioid, cursoid, datamatricula, status) values (4, 4, '2024-04-01', 'A');
+insert into aluraz.matriculas (usuarioid, cursoid, datamatricula, status) values (5, 5, '2024-05-18', 'F');
+insert into aluraz.matriculas (usuarioid, cursoid, datamatricula, status) values (6, 6, '2024-06-07', 'A');
+insert into aluraz.matriculas (usuarioid, cursoid, datamatricula, status) values (7, 7, '2024-07-21', 'A');
+insert into aluraz.matriculas (usuarioid, cursoid, datamatricula, status) values (8, 8, '2024-08-15', 'C');
+insert into aluraz.matriculas (usuarioid, cursoid, datamatricula, status) values (9, 9, '2024-09-01', 'A');
+insert into aluraz.matriculas (usuarioid, cursoid, datamatricula, status) values (1, 10, '2024-09-01', 'A');
+
+insert into aluraz.matriculas (usuarioid, cursoid, datamatricula, status) values (2, 11, '2024-09-05', 'A');
+insert into aluraz.matriculas (usuarioid, cursoid, datamatricula, status) values (3, 12, '2024-09-06', 'F');
+insert into aluraz.matriculas (usuarioid, cursoid, datamatricula, status) values (4, 13, '2024-09-07', 'A');
+insert into aluraz.matriculas (usuarioid, cursoid, datamatricula, status) values (5, 14, '2024-09-08', 'C');
+insert into aluraz.matriculas (usuarioid, cursoid, datamatricula, status) values (6, 15, '2024-09-09', 'A');
+insert into aluraz.matriculas (usuarioid, cursoid, datamatricula, status) values (7, 16, '2024-09-10', 'A');
+insert into aluraz.matriculas (usuarioid, cursoid, datamatricula, status) values (8, 17, '2024-09-11', 'F');
+insert into aluraz.matriculas (usuarioid, cursoid, datamatricula, status) values (9, 18, '2024-09-12', 'A');
+insert into aluraz.matriculas (usuarioid, cursoid, datamatricula, status) values (1, 19, '2024-09-13', 'C');
+insert into aluraz.matriculas (usuarioid, cursoid, datamatricula, status) values (2, 20, '2024-09-14', 'A');
+
+
+insert into aluraz.pagamentos (matriculaid, valor, datapagamento, metodopagamento) values (1, 250.00, '2024-01-10', 'cartao');
+insert into aluraz.pagamentos (matriculaid, valor, datapagamento, metodopagamento) values (2, 300.00, '2024-02-05', 'pix');
+insert into aluraz.pagamentos (matriculaid, valor, datapagamento, metodopagamento) values (3, 400.00, '2024-03-12', 'boleto');
+insert into aluraz.pagamentos (matriculaid, valor, datapagamento, metodopagamento) values (4, 350.00, '2024-04-01', 'cartao');
+insert into aluraz.pagamentos (matriculaid, valor, datapagamento, metodopagamento) values (5, 280.00, '2024-05-18', 'pix');
+insert into aluraz.pagamentos (matriculaid, valor, datapagamento, metodopagamento) values (6, 320.00, '2024-06-07', 'cartao');
+insert into aluraz.pagamentos (matriculaid, valor, datapagamento, metodopagamento) values (7, 270.00, '2024-07-21', 'pix');
+insert into aluraz.pagamentos (matriculaid, valor, datapagamento, metodopagamento) values (8, 290.00, '2024-08-15', 'cartao');
+insert into aluraz.pagamentos (matriculaid, valor, datapagamento, metodopagamento) values (9, 220.00, '2024-09-01', 'boleto');
+insert into aluraz.pagamentos (matriculaid, valor, datapagamento, metodopagamento) values (10, 180.00, '2024-09-01', 'pix');
+
+insert into aluraz.pagamentos (matriculaid, valor, datapagamento, metodopagamento) values (11, 260.00, '2024-09-05', 'pix');
+insert into aluraz.pagamentos (matriculaid, valor, datapagamento, metodopagamento) values (12, 240.00, '2024-09-06', 'cartao');
+insert into aluraz.pagamentos (matriculaid, valor, datapagamento, metodopagamento) values (13, 200.00, '2024-09-07', 'boleto');
+insert into aluraz.pagamentos (matriculaid, valor, datapagamento, metodopagamento) values (14, 280.00, '2024-09-08', 'cartao');
+insert into aluraz.pagamentos (matriculaid, valor, datapagamento, metodopagamento) values (15, 310.00, '2024-09-09', 'pix');
+insert into aluraz.pagamentos (matriculaid, valor, datapagamento, metodopagamento) values (16, 270.00, '2024-09-10', 'cartao');
+insert into aluraz.pagamentos (matriculaid, valor, datapagamento, metodopagamento) values (17, 400.00, '2024-09-11', 'pix');
+insert into aluraz.pagamentos (matriculaid, valor, datapagamento, metodopagamento) values (18, 450.00, '2024-09-12', 'boleto');
+insert into aluraz.pagamentos (matriculaid, valor, datapagamento, metodopagamento) values (19, 220.00, '2024-09-13', 'cartao');
+insert into aluraz.pagamentos (matriculaid, valor, datapagamento, metodopagamento) values (20, 180.00, '2024-09-14', 'pix');
+
+-- Curso 1 (SQL Avançado) com Ana Martins (Banco de Dados)
+insert into aluraz.cursosistrutores (cursosid, intrutoresid) values (1, 1);
+
+-- Curso 2 (Python para Data Science) com Carlos Souza
+insert into aluraz.cursosistrutores (cursosid, intrutoresid) values (2, 2);
+
+-- Curso 3 (Machine Learning Básico) com Fernanda Lima
+insert into aluraz.cursosistrutores (cursosid, intrutoresid) values (3, 3);
+
+-- Curso 4 (Docker e Kubernetes) com João Pereira
+insert into aluraz.cursosistrutores (cursosid, intrutoresid) values (4, 4);
+
+-- Curso 5 (Java Completo) com Lucas Almeida
+insert into aluraz.cursosistrutores (cursosid, intrutoresid) values (5, 5);
+
+-- Curso 6 (Cibersegurança Essencial) com Mariana Rocha
+insert into aluraz.cursosistrutores (cursosid, intrutoresid) values (6, 6);
+
+-- Curso 7 (Introdução a Big Data) com Rafael Torres
+insert into aluraz.cursosistrutores (cursosid, intrutoresid) values (7, 7);
+
+-- Curso 8 (Design Patterns em C#) com Beatriz Mendes
+insert into aluraz.cursosistrutores (cursosid, intrutoresid) values (8, 8);
+
+-- Curso 9 (Gestão de Projetos Ágeis) com Pedro Carvalho
+insert into aluraz.cursosistrutores (cursosid, intrutoresid) values (9, 9);
+
+-- Curso 10 (Excel Avançado) com Juliana Costa
+insert into aluraz.cursosistrutores (cursosid, intrutoresid) values (10, 10);
+
+-- Curso 11 (NoSQL com MongoDB) com Thiago Ramos
+insert into aluraz.cursosistrutores (cursosid, intrutoresid) values (11, 11);
+
+-- Curso 12 (Power BI Completo) com Camila Duarte
+insert into aluraz.cursosistrutores (cursosid, intrutoresid) values (12, 12);
+
+-- Curso 13 (Introdução a Redes) com Marcelo Gomes
+insert into aluraz.cursosistrutores (cursosid, intrutoresid) values (13, 13);
+
+-- Curso 14 (Kotlin para Android) com Aline Ferreira
+insert into aluraz.cursosistrutores (cursosid, intrutoresid) values (14, 14);
+
+-- Curso 15 (Rust Essencial) com Roberto Nascimento
+insert into aluraz.cursosistrutores (cursosid, intrutoresid) values (15, 15);
+
+-- Curso 16 (Testes Automatizados com Selenium) com Sofia Andrade
+insert into aluraz.cursosistrutores (cursosid, intrutoresid) values (16, 16);
+
+-- Curso 17 (Cloud Computing na AWS) com Diego Fernandes
+insert into aluraz.cursosistrutores (cursosid, intrutoresid) values (17, 17);
+
+-- Curso 18 (Blockchain e Criptomoedas) com Eduardo Moreira
+insert into aluraz.cursosistrutores (cursosid, intrutoresid) values (18, 18);
+
+-- Curso 19 (Gestão Financeira para Devs) com Vanessa Oliveira
+insert into aluraz.cursosistrutores (cursosid, intrutoresid) values (19, 19);
+
+-- Curso 20 (Inglês Técnico para TI) com Fábio Teixeira
+insert into aluraz.cursosistrutores (cursosid, intrutoresid) values (20, 20);
+
+
+
+
+/*
+ * 
+1. Top 5 cursos mais lucrativos (baseado na soma dos pagamentos). V
+
+2. Usuários que se matricularam em mais de 3 cursos, mas não concluíram nenhum. X
+
+3. Instrutores que têm cursos em mais de uma categoria. X
+
+4. Receita mensal da plataforma nos últimos 12 meses (usar GROUP BY e funções de data). V
+
+5. Cursos nunca matriculados por ninguém. X
+
+6. Para cada categoria, trazer a média de preço dos cursos e a quantidade de alunos matriculados. V
+
+7. Listar os usuários que gastaram acima da média geral da plataforma. V
+
+8. Gerar um ranking de usuários com maior número de cursos concluídos. V
+
+9. Criar uma CTE que traga a quantidade acumulada de matrículas por mês (crescimento da base). V
+
+10. Criar uma VIEW chamada vw_relatorio_instrutores que mostre: nome do instrutor, total de cursos, total de alunos e receita gerada. V
+ *
+ */
+
+-- 1:
+select
+	cursos.titulo,
+	sum(pagamentos.valor) as total_pagamento
+from
+	 aluraz.pagamentos
+join aluraz.matriculas on pagamentos.matriculaid = matriculas.id
+join aluraz.cursos     on matriculas.cursoid     = cursos.id
+group by 1
+order by total_pagamento desc
+limit 5;
+
+-- 2:
+
+select 
+	 usuarios.nome,
+	 count(matriculas.usuarioid) as cursando
+from aluraz.matriculas
+join aluraz.usuarios on matriculas.usuarioid = usuarios.id
+where matriculas.status <> 'F'
+group by 1
+having count(matriculas.usuarioid) > 3;
+
+-- não interpretei o enunciado de forma correta, pois não excluir pessoas que finalizaram algum
+
+-- corrigido:
+select 
+    u.nome,
+    count(m.id) as total_matriculas
+from aluraz.matriculas m
+join aluraz.usuarios u on m.usuarioid = u.id
+group by u.nome
+having count(m.id) > 3
+   and sum(case when m.status = 'F' then 1 else 0 end) = 0;
+
+
+-- 3:
+
+select * from aluraz.cursos
+select * from aluraz.cursosistrutores
+
+select categoria, count(categoria) from aluraz.cursos group by 1
+
+select 
+	instrutores.nome
+from aluraz.instrutores
+join aluraz.cursosistrutores on cursosistrutores.intrutoresid = instrutores.id
+join aluraz.cursos           on cursosistrutores.cursosid     = cursos.id
+where cursos.categoria in (
+	select cursos.categoria 
+	from aluraz.cursos 
+	group by 1
+	having count(cursos.categoria) > 1
+);
+
+-- corrigido:
+select 
+    i.nome
+from aluraz.instrutores i
+join aluraz.cursosistrutores ci on ci.intrutoresid = i.id
+join aluraz.cursos c            on ci.cursosid = c.id
+group by i.nome
+having count(distinct c.categoria) > 1;
+
+-- 4. Receita mensal da plataforma nos últimos 12 meses (usar GROUP BY e funções de data).
+
+select 
+	extract(month from datapagamento) as mes,
+	sum(valor)
+from aluraz.pagamentos
+group by mes
+order by mes;
+
+-- Cursos nunca matriculados por ninguém.
+
+select 
+	*
+from 
+	aluraz.matriculas
+join aluraz.cursos on matriculas.cursoid = cursos.id
+
+
+select 
+	cursos.titulo
+from 
+	 aluraz.matriculas
+join aluraz.cursos on matriculas.cursoid = cursos.id
+where matriculas.cursoid not in (
+		select cursos.id from aluraz.matriculas
+		join aluraz.cursos on matriculas.cursoid = cursos.id
+)
+
+-- query corrigida
+
+select c.titulo
+from aluraz.cursos c
+where not exists (
+    select 1 
+    from aluraz.matriculas m
+    where m.cursoid = c.id
+);
+
+-- 6. Para cada categoria, trazer a média de preço dos cursos e a quantidade de alunos matriculados.
+
+select * from aluraz.cursos
+
+
+select
+	cursos.categoria,
+	avg(cursos.preco) as media
+from
+aluraz.cursos
+group by cursos.categoria
+
+
+select
+	cursos.categoria,
+	avg(cursos.preco) as media_preco_categoria,
+	count(distinct usuarios.nome) as quantidade_matriculado
+from
+	aluraz.cursos
+join aluraz.matriculas on matriculas.cursoid = cursos.id
+join aluraz.usuarios on matriculas.usuarioid = usuarios.id
+group by cursos.categoria;
+
+-- 7. Listar os usuários que gastaram acima da média geral da plataforma.
+
+select
+	avg(cursos.preco) as media_preco_cursos
+from
+	aluraz.cursos
+
+select
+	usuarios.nome,
+	sum(cursos.preco) as pagos
+from
+	aluraz.usuarios
+join aluraz.matriculas on matriculas.usuarioid = usuarios.id
+join aluraz.cursos on matriculas.cursoid = cursos.id
+group by usuarios.nome
+having sum(cursos.preco) > (select
+	avg(cursos.preco) as media_preco_cursos
+from
+	aluraz.cursos)
+
+-- 8. Gerar um ranking de usuários com maior número de cursos concluídos.
+
+select * from aluraz.matriculas m 
+
+select * from aluraz.matriculas m where status = 'F'
+
+select 
+	usuarios.nome,
+	count(matriculas.cursoid) as cursos_finalizados
+from 
+	aluraz.matriculas
+join aluraz.usuarios on matriculas.usuarioid = usuarios.id
+where status = 'F'
+group by usuarios.nome
+order by count(matriculas.cursoid) desc
+
+-- 9. Criar uma CTE que traga a quantidade acumulada de matrículas por mês (crescimento da base).
+
+select * from aluraz.matriculas
+
+
+with 
+	cte_matrculas_mes as (
+		select
+			extract(month from matriculas.datamatricula) as mes,
+			count(extract(month from matriculas.datamatricula)) as quantidade_matriculas_mes
+		from 
+			aluraz.matriculas
+		group by 1
+		order by extract(month from matriculas.datamatricula)
+)
+select 
+	cte_matrculas_mes.mes,
+	cte_matrculas_mes.quantidade_matriculas_mes
+from
+	cte_matrculas_mes
+
+	
+-- 10. Criar uma VIEW chamada vw_relatorio_instrutores que mostre: nome do instrutor, total de cursos, total de alunos e receita gerada.
+
+select * from aluraz.cursos
+	
+select * from aluraz.cursosistrutores
+
+select * from aluraz.instrutores
+
+create view vw_relatorio_instrutores as
+	select
+		instrutores.nome as instrutor,
+		cursos.titulo,
+		count(cursos.titulo) as quantidade_cursos,
+		count(usuarios.nome) as quantidade_alunos,
+		sum (pagamentos.valor) as receita_gerada
+	from
+		aluraz.instrutores
+	join aluraz.cursosistrutores on cursosistrutores.intrutoresid = instrutores.id
+	join aluraz.cursos on cursosistrutores.cursosid = cursos.id
+	join aluraz.matriculas on matriculas.cursoid = cursos.id
+	join aluraz.usuarios on matriculas.usuarioid = usuarios.id
+	join aluraz.pagamentos on pagamentos.matriculaid = matriculas.id
+	group by instrutores.nome, cursos.titulo;
+
+
+	select
+		instrutores.nome as instrutor,
+		cursos.titulo,
+		count(cursos.titulo) as quantidade_cursos,
+		count(usuarios.nome) as quantidade_alunos,
+		sum (pagamentos.valor) as receita_gerada
+	from
+		aluraz.instrutores
+	join aluraz.cursosistrutores on cursosistrutores.intrutoresid = instrutores.id
+	join aluraz.cursos on cursosistrutores.cursosid = cursos.id
+	join aluraz.matriculas on matriculas.cursoid = cursos.id
+	join aluraz.usuarios on matriculas.usuarioid = usuarios.id
+	join aluraz.pagamentos on pagamentos.matriculaid = matriculas.id
+	group by instrutores.nome, cursos.titulo
+
+
+
+select * from vw_relatorio_instrutores
+
+
