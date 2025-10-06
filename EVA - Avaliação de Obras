@@ -477,16 +477,125 @@ select eva.f_inserir_obra ('Resident Evil 4 Remake', '2023-03-24', 3, 17, Null, 
 
 
 
+-- Novas Adições para melhorar a performace do banco
+-- Criar usuários
+
+create user leitura_01 password '1234';
+grant select on all tables in schema eva to leitura_01;
+
+create user master_root password 'admin';
+grant insert on all tables in schema eva to master_root;
+grant update on all tables in schema eva to master_root;
+grant delete on all tables in schema eva to master_root;
 
 
+-- Adicionar comentários
 
+comment on table eva.obra is 'Aqui nessa tabela é para ter registro de todas as obras de qualquer tipo';
+comment on table eva.ator is 'O ator não será muito utilizado, e ele teria que ser julgado na tela de obra';
 
+-- Criar uma view materializada com a média das notas, para puxar mais rapido os dados (Uma view materializada deixa o valor salvo, se ele for alterado precisa dar refresh)
 
+create materialized view eva.mv_media_notas as
+select obra.nome, avg(avaliacao.nota) as media_nota
+from eva.obra
+left join eva.avaliacao on obra.id = avaliacao.obraid
+group by obra.nome;
 
+	/*caso preciose atualizar*/
 
+refresh materialized view eva.mv_media_notas;
 
+select * from eva.mv_media_notas
 
+-- criação de indice para facilitar a busca das obras (ele agiliza consultas)
 
+create index idx_obra_nome on eva.obra(nome);
+
+select * from eva.obra where nome like 'Harry Potter%';
+
+-- deixar unique o tipo e subtipo (Dessa forma ele deixa repetir um dos dois dados, mas não os dois)
+
+alter table eva.categoria
+add constraint uq_categoria_tipo_subtipo unique (tipo, subtipo);
+
+-- Adicionar trigger que pode trazer a média das notas e uma preencha a data hota de criação de usuário e uma pra backup de avalição/obra
+
+-- Essa é pra adição automatica da data de criação do usuário
+
+create or replace function eva.f_data_atual_usuario()
+returns trigger as $$
+	begin
+		new.datacriacao := now();
+		return new;
+	end;
+$$ language plpgsql;
+	
+create trigger tg_usuario_data
+before insert on eva.usuario
+for each row
+execute function eva.f_data_atual_usuario();
+
+-- função de calculo de média das notas
+
+alter table eva.avaliacao
+add medianota int;
+
+create or replace function eva.calculo_media_nota()
+returns trigger as $$
+declare 
+	v_media float;
+	begin
+		
+		select avg(avaliacao.nota)
+		into v_media
+		from eva.avaliacao
+		where obraid = new.obraid;
+
+		update eva.obra
+		set medianota = v_media
+		where id = new.obraid;
+
+		return new;
+
+	end;
+$$ language plpgsql;
+
+create trigger tg_medianota
+after insert or update on eva.avaliacao
+for each row
+execute function eva.calculo_media_nota();
+
+-- trigger de backup
+
+drop table eva.bkp_obra
+
+create table eva.bkp_obra (
+	id serial primary key,
+	bkp_obraid int,
+	bkp_nome varchar(100) not null unique,
+	bkp_datalancamento date not null,
+	bkp_tipoobraid int,
+ 	bkp_categoriaid int,
+ 	bkp_autorid int,
+ 	bkp_empresaresponsavelid int
+);
+
+create or replace function eva.f_backup_obra()
+returns trigger as $$
+	begin
+		
+		insert into eva.bkp_obra (bkp_obraid, bkp_nome, bkp_datalancamento, bkp_tipoobraid, bkp_categoriaid, bkp_autorid, bkp_empresaresponsavelid) values
+			(new.id, new.nome, new.datalancamento, new.tipoobraid, new.categoriaid, new.autorid, new.empresaresponsavelid);
+
+		return new;
+	end;
+$$ language plpgsql;
+	
+create trigger bkp_obra
+after insert or update on eva.obra
+for each row
+execute function eva.f_backup_obra();
 
 
 
@@ -521,11 +630,8 @@ select eva.f_inserir_usuario ('nome', 'nascimento', 'titulo');
 
 -- Cantinho das consultas rapidas
 
-select * from eva.empresaresponsavel e  
+select * from eva.avaliacao a   
 
 select * from eva.v_consultar_obra
 
 select * from eva.v_consultar_notas
-
-
-
