@@ -1,0 +1,113 @@
+-- Criação do schema onde ficará o banco de dados
+create schema odin;
+
+-- Criação das tabelas do banco de dados
+
+create table odin.usuario (
+	id serial primary key,
+	nome varchar(100) not null,
+	email varchar(100) unique, 
+	senha varchar(50) not null, 
+	enderecoid int, 
+	datacadastro date not null,
+	constraint FK_usuario_endereco foreign key (enderecoid) references odin.endereco(id)
+);
+
+create table odin.produto (
+	id serial primary key,
+	nome varchar(100) not null unique,
+	descricao varchar(100) not null,
+	preco numeric(10,2) not null,
+	categoriaid int not null,
+	estoque int,
+	fornecedorid int,
+	constraint FK_produto_fornecedor foreign key (fornecedorid) references odin.fornecedor(id),
+	constraint FK_produto_categoria foreign key (categoriaid) references odin.categoria(id)
+);
+
+create table odin.pedido (
+	id serial primary key,
+	usuarioid int not null,
+	datapedido date not null,
+	status varchar(1) not null,
+	total numeric(6,2) not null,
+	constraint FK_pedido_usuario foreign key (usuarioid) references odin.usuario(id)
+);
+
+create table odin.pedidoproduto (
+	pedidoid int not null,
+	produtoid int not null,
+	quantidade int not null,
+	precounitario numeric(6,2),
+	constraint FK_produtopedido_pedido foreign key (pedidoid) references odin.pedido(id),
+	constraint FK_produtopedido_produto foreign key (produtoid) references odin.produto(id)
+);
+
+create table odin.pagamento (
+	id serial primary key,
+	pedidoid int not null,
+	formapagamentoid int,
+	valor numeric(6,2) not null,
+	status varchar(1) not null,
+	datapagamento date not null,
+	constraint FK_pagamento_pedido foreign key (pedidoid) references odin.pedido(id),
+	constraint FK_pagamento_formagamento foreign key (formapagamentoid) references odin.formapagamento(id)
+);
+
+create table odin.categoria (
+	id serial primary key,
+	nome varchar(50) not null
+);
+
+create table odin.estoque (
+	produtoid int not null,
+	quantidade int not null,
+	dataatualizacao date,
+	constraint FK_estoque_produto foreign key (produtoid) references odin.produto(id)
+);
+
+create table odin.recomendacao (
+	usuarioid int not null,
+	produtoid int not null,
+	score numeric(3,1),
+	constraint FK_recomendacao_usuario foreign key (usuarioid) references odin.usuario(id),
+	constraint FK_recomendacao_produto foreign key (produtoid) references odin.produto(id)
+);
+
+create table odin.endereco (
+	id serial primary key,
+	rua varchar(100) not null,
+	numero int not null,
+	bairro varchar(100),
+	cep varchar(10),
+	complemento varchar(100)
+);
+
+create table odin.fornecedor (
+	id serial primary key,
+	status varchar(1) not null,
+	nome varchar(100) not null,
+	enderecoid int not null
+);
+
+create table odin.formapagamento (
+	id serial primary key,
+	nome varchar(20) not null
+);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
