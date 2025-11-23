@@ -1,0 +1,433 @@
+SELECT
+    t1.seller_id,
+    sum(t1.price) + sum(t1.freight_value) as valor_total
+from tb_order_items as t1
+
+group by 1
+
+-- primeira consulta
+
+with vendas as (
+    select
+        t1.customer_unique_id,
+        t4.product_category_name,
+        count(t2.order_id) as qtd,
+        sum(t3.price) as total_venda
+    FROM tb_customers as t1
+
+    left join tb_orders as t2
+        on t1.customer_id = t2.customer_id
+    left join tb_order_items as t3
+        on t2.order_id = t3.order_id
+    left join tb_products as t4
+        on t3.product_id = t4.product_id
+
+    group by 1,2
+
+    order by qtd desc
+),
+
+rank as (
+    select
+        *,
+        row_number() over(PARTITION by customer_unique_id order by qtd desc, total_venda desc) as rank
+    from vendas
+)
+
+SELECT
+    *
+FROM rank
+
+where rank = 1
+
+order by qtd desc
+
+-- segunda consulta:
+with venda_total as (
+select 
+    seller_id,
+    sum(t1.price) + sum(t1.freight_value) as valor_total,
+        sum(case when payment_type = 'credit_card' then payment_value
+        end) as credito,
+        sum(case when payment_type = 'boleto' then payment_value
+        end) as boleto,
+        sum(CASE WHEN payment_type = 'voucher' then payment_value
+        end) as voucher,
+        sum(CASE WHEN payment_type = 'debit_card' then payment_value
+        end) as Cartao_debito
+from tb_order_payments
+
+join tb_order_items as t1
+    on tb_order_payments.order_id = t1.order_id
+
+    group by 1
+)
+
+SELECT
+    seller_id,
+    valor_total,
+    (100 * credito) / valor_total as credito,
+    (100 * boleto) / valor_total as boleto,
+    (100 * voucher) / valor_total as voucher,
+    (100 * Cartao_debito) / valor_total as Cartao_debito
+from venda_total
+
+-- terceira
+
+with basico as (
+select 
+    t1.seller_id,
+    t2.product_category_name
+from tb_order_items as t1
+
+join tb_products as t2
+    on t1.product_id = t2.product_id
+
+    order by 1
+),
+
+categorias as (
+select
+    seller_id,
+    product_category_name,
+    count(product_category_name) as qtd_categoria,
+    CASE when product_category_name like '%alimentos%' then count(product_category_name) else 0 end as alimentos,
+    CASE when product_category_name like '%construcao%' then count(product_category_name) else 0 end as construcao,
+    CASE when product_category_name like '%eletrodomesticos%' then count(product_category_name) else 0 end as eletrodomesticos,
+    CASE when product_category_name like '%fashion%' then count(product_category_name) else 0 end as fashion,
+    CASE when product_category_name like '%livros%' then count(product_category_name) else 0 end as livros,
+    CASE when product_category_name like '%moveis%' then count(product_category_name) else 0 end as moveis,
+    CASE when product_category_name like '%telefonia%' then count(product_category_name) else 0 end as telefonia,
+    CASE WHEN product_category_name NOT LIKE '%alimentos%'
+              AND product_category_name NOT LIKE '%construcao%'
+              AND product_category_name NOT LIKE '%eletrodomesticos%'
+              AND product_category_name NOT LIKE '%fashion%'
+              AND product_category_name NOT LIKE '%livros%'
+              AND product_category_name NOT LIKE '%moveis%'
+              AND product_category_name NOT LIKE '%telefonia%'
+        THEN count(product_category_name) else 0 END AS outros
+from basico
+
+where product_category_name is not null
+
+group by 1, 2
+order by 1
+)
+
+select
+    seller_id,
+    sum(alimentos) + sum(construcao) + sum(eletrodomesticos) + sum(fashion) + sum(livros) + sum(moveis) + sum(telefonia) + sum(outros) as qtd_total,
+    alimentos,
+    construcao,
+    eletrodomesticos,
+    fashion,
+    livros,
+    moveis,
+    telefonia,
+    outros
+from categorias
+
+group by 1
+
+-- funcional
+WITH basico AS (
+    SELECT 
+        t1.seller_id,
+        t2.product_category_name
+    FROM tb_order_items AS t1
+    JOIN tb_products AS t2
+        ON t1.product_id = t2.product_id
+    WHERE t2.product_category_name IS NOT NULL
+),
+
+categorias AS (
+    SELECT
+        seller_id,
+        SUM(CASE WHEN product_category_name LIKE '%alimentos%' THEN 1 ELSE 0 END) AS alimentos,
+        SUM(CASE WHEN product_category_name LIKE '%construcao%' THEN 1 ELSE 0 END) AS construcao,
+        SUM(CASE WHEN product_category_name LIKE '%eletrodomesticos%' THEN 1 ELSE 0 END) AS eletrodomesticos,
+        SUM(CASE WHEN product_category_name LIKE '%fashion%' THEN 1 ELSE 0 END) AS fashion,
+        SUM(CASE WHEN product_category_name LIKE '%livros%' THEN 1 ELSE 0 END) AS livros,
+        SUM(CASE WHEN product_category_name LIKE '%moveis%' THEN 1 ELSE 0 END) AS moveis,
+        SUM(CASE WHEN product_category_name LIKE '%telefonia%' THEN 1 ELSE 0 END) AS telefonia,
+        SUM(CASE WHEN product_category_name NOT LIKE '%alimentos%'
+                      AND product_category_name NOT LIKE '%construcao%'
+                      AND product_category_name NOT LIKE '%eletrodomesticos%'
+                      AND product_category_name NOT LIKE '%fashion%'
+                      AND product_category_name NOT LIKE '%livros%'
+                      AND product_category_name NOT LIKE '%moveis%'
+                      AND product_category_name NOT LIKE '%telefonia%'
+                 THEN 1 ELSE 0 END) AS outros
+    FROM basico
+    GROUP BY seller_id
+),
+
+ordernar as (
+SELECT
+    seller_id,
+    (alimentos + construcao + eletrodomesticos + fashion + livros + moveis + telefonia + outros) AS qtd_total,
+    alimentos,
+    construcao,
+    eletrodomesticos,
+    fashion,
+    livros,
+    moveis,
+    telefonia,
+    outros
+FROM categorias
+ORDER BY seller_id
+)
+
+SELECT
+    seller_id,
+    (alimentos * 100 / qtd_total) as alimentos,
+    (construcao * 100 / qtd_total) as construcao,
+    (eletrodomesticos * 100 / qtd_total) as eletrodomesticos,
+    (fashion * 100 / qtd_total) as fashion,
+    (livros * 100 / qtd_total) as livros,
+    (moveis * 100 / qtd_total) as moveis,
+    (telefonia * 100 / qtd_total) as telefonia,
+    (outros * 100 / qtd_total) as outros
+from ordernar
+
+-- quinta
+
+with inicio as (
+    select 
+        distinct
+        strftime('%Y-%m-01', t1.order_approved_at) as mes_referencia,
+        1 as key
+    from tb_orders as t1
+
+    where mes_referencia is not null
+order by 1 asc
+
+),
+
+primeira_venda as (
+select
+    t1.seller_id,
+    min(strftime('%Y-%m-01', t2.order_approved_at)) as mes_primeira_venda,
+    1 as key
+from tb_order_items as t1
+
+left join tb_orders as t2
+    on t1.order_id = t2.order_id
+
+group by 1
+),
+
+cruzamento as (
+select
+    t1.mes_referencia,
+    t2.seller_id,
+    t2.mes_primeira_venda
+FROM inicio as t1
+
+left join primeira_venda as t2
+    on t1.key = t2.key
+),
+
+venda_mes as (
+select
+    t1.seller_id,
+    strftime('%Y-%m-01', t2.order_approved_at) as mes_primeira_venda,
+    sum(t1.price) + sum(t1.freight_value) as venda_total
+from tb_order_items as t1
+
+left join tb_orders as t2
+    on t1.order_id = t2.order_id
+
+group by 1, 2
+)
+
+select
+    t1.mes_referencia,
+    t1.seller_id,
+    t1.mes_primeira_venda,
+    coalesce(sum(t2.venda_total), 0) as valor_venda
+from cruzamento as t1
+
+left join venda_mes as t2
+    on t1.seller_id = t2.seller_id and t1.mes_referencia = t1.mes_primeira_venda
+
+group by 1, 2, 3
+
+order by t1.seller_id, t1.mes_referencia
+
+-- final
+
+with inicio as (
+    select 
+        distinct
+        strftime('%Y-%m-01', order_approved_at) as mes_referencia,
+        1 as key
+    from tb_orders
+
+    where mes_referencia is not null
+order by 1 asc
+
+),
+
+primeira_venda as (
+select
+    t1.seller_id,
+    min(strftime('%Y-%m-01', order_approved_at)) as mes_primeira_venda,
+    1 as key
+from tb_order_items as t1
+
+left join tb_orders as t2
+    on t1.order_id = t2.order_id
+
+group by 1
+),
+
+cruzamento as (
+select
+    t1.mes_referencia,
+    t2.seller_id,
+    t2.mes_primeira_venda
+FROM inicio as t1
+
+left join primeira_venda as t2
+    on t1.key = t2.key
+
+    order by seller_id, mes_referencia asc
+),
+
+venda_mes as (
+select
+    t1.seller_id,
+    strftime('%Y-%m-01', t2.order_approved_at) as mes_primeira_venda,
+    sum(t1.price) as venda_total
+from tb_order_items as t1
+
+left join tb_orders as t2
+    on t1.order_id = t2.order_id
+
+group by 1, 2
+order by 1
+),
+
+pronto as (
+select
+    t1.mes_referencia,
+    t1.seller_id,
+    t1.mes_primeira_venda,
+    coalesce(sum(t2.venda_total), 0) as valor_venda
+from cruzamento as t1
+
+left join venda_mes as t2
+    on t1.seller_id = t2.seller_id and t1.mes_referencia = t2.mes_primeira_venda
+
+group by 1, 2, 3
+
+order by 2, 1
+)
+
+select 
+    *,
+    case 
+        when 
+            mes_referencia < mes_primeira_venda
+        then 'Prior entry'
+        when 
+            mes_referencia = mes_primeira_venda
+        then 'Novo'
+        WHEN
+            lag(valor_venda) over(PARTITION by seller_id order by mes_referencia) > 0
+            and lag(valor_venda, 0) over(PARTITION by seller_id order by mes_referencia) <> 0
+        then 'regular'
+        WHEN
+            lag(valor_venda) over(PARTITION by seller_id order by mes_referencia) > 0
+            and lag(valor_venda, 0) over(PARTITION by seller_id order by mes_referencia) = 0
+            or lag(valor_venda) over(PARTITION by seller_id order by mes_referencia) = 0
+            and lag(valor_venda, 0) over(PARTITION by seller_id order by mes_referencia) = 0
+        then 'churn'
+        WHEN
+            lag(valor_venda) over(PARTITION by seller_id order by mes_referencia) = 0
+            and lag(valor_venda, 0) over(PARTITION by seller_id order by mes_referencia) > 0
+        then 'recuperado'
+        end as baka
+from pronto
+
+
+
+
+
+
+
+
+
+-- bonue:
+
+with produto as (
+select 
+    t1.seller_id,
+    t2.product_category_name,
+    t3.seller_state,
+    row_number() over(PARTITION by t1.seller_id order by t2.product_category_name) as categoria_mais_vendida,
+    count(distinct(t1.order_id)) as qtd_pedido,
+    sum(t1.price) as valor_venda,
+    round(avg(t1.price + t1.freight_value), 2) as ticket_medio
+from tb_order_items as t1
+
+join tb_products as t2
+    on t1.product_id = t2.product_id
+
+join tb_sellers as t3
+    on t1.seller_id = t3.seller_id
+
+join tb_orders as t4
+    on t1.order_id = t4.order_id
+
+where t4.order_status <> 'canceled'
+
+group by 1, 2, 3
+
+),
+
+score as (
+select 
+    t2.seller_id,
+    avg(t1.review_score) as score_medio
+from tb_order_reviews as t1
+join tb_order_items as t2
+    on t1.order_id = t2.order_id
+group by 1
+),
+
+pagamento as (
+    select 
+    t2.seller_id,
+    sum(case when t1.payment_type = 'credit_card' then 1 else 0 end) * 100 / count(*) as pct_credit_card,
+    sum(case when t1.payment_type = 'boleto' then 1 else 0 end) * 100 / count(*) as pct_boleto
+
+from tb_order_payments as t1
+join tb_order_items as t2
+    on t1.order_id = t2.order_id
+
+group by 1
+)
+
+select 
+    t1.seller_id,
+    t1.product_category_name,
+    categoria_mais_vendida,
+    t1.qtd_pedido,
+    t1.valor_venda,
+    t1.ticket_medio,
+    t2.score_medio,
+    t3.pct_credit_card,
+    t3.pct_boleto,
+    rank() over(PARTITION by t1.seller_state, t1.product_category_name order by t1.valor_venda desc) as ranking_estado_categoria,
+    t1.seller_state
+from pagamento as t3
+
+join produto as t1
+    on t1.seller_id = t3.seller_id
+
+join score as t2
+    on t1.seller_id = t2.seller_id
+
+where categoria_mais_vendida = 1 and product_category_name is not null
